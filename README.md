@@ -22,3 +22,4 @@ https://cran.r-project.org/web/packages/googleLanguageR/googleLanguageR.pdf
 
 https://cran.r-project.org/web/packages/WikipediR/WikipediR.pdf
 
+NOTE: At this moment in development, this Shiny App needs eSpeak executable installed in your computer and added to the path.
