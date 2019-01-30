@@ -7,72 +7,74 @@ library(htm2txt)
 my.dir <- getwd()
 setwd(dir=my.dir)
 
-ui <- fluidPage(theme = shinytheme("slate"),
-                selectInput(inputId="lang", label="Select Language:",choices= c("EN","PT"), selected="EN"),
+ui <- fluidPage( shinythemes::themeSelector(), sidebarPanel(
+                selectInput(inputId="lang", label="Select Language:",choices= c("en","pt-pt"), selected="en"),
                 textInput("n", "Input Search:"),
-                actionButton("Run", "Click Me"),
-                verbatimTextOutput("nText")
+                sliderInput(inputId="speed","Choose Voice Speed",100,160,135,10),
+                actionButton("Run", "Click Me")),
+                mainPanel(verbatimTextOutput("nText"))
                 
 )
 
 server <- function(input, output, session){
-  ntext <- eventReactive(input$Run, {
-    inp = input$n
-    lang = input$lang
+  
+  my.new.text <- "Welcome to Wikipedia Search and Reader. Select your language, input some keywords and hit Click Me button. Enjoy!"
+  
+ 
+  showModal(modalDialog(my.new.text, title ="Reading Text/Lendo o Texto...", footer = modalButton("Dismiss Window"),
+                        size = "l", easyClose = TRUE, fade = TRUE))
+  
+  
+  tts.espeak <- function(lang="en", speed=140){
     
-    if(lang=="EN"){
+   
+    
+    text <- my.new.text
+    
+    if(is.null(text)){return()}
+    
+    phrases.to.read <- strsplit(text, "[\r\n]")[[1]]
+    
+    for (i in 1:length(phrases.to.read)){
+      showModal(modalDialog(phrases.to.read[i], title ="Reading Text/Lendo o Texto...", footer = modalButton("Close/Sair"),
+                  size = "l", easyClose = TRUE, fade = TRUE))
+      
+      system("cmd.exe", input = paste('espeak -s ',paste(speed),' -v ',lang,' -k -20 "',phrases.to.read[i],'"', sep=""))
+    }
+  }
+  
+  tts.espeak("en","140")
+
+  ntext <- eventReactive(input$Run, {
+    inp <- input$n
+    lang <- input$lang
+    speed <- input$speed
+    
+    if(lang=="en"){
       url1.en <- 'https://en.wikipedia.org/wiki'
       urlNew.en = paste(url1.en, inp,sep = '/')
-      text.en <- gettxt(urlNew.en)
-      text.en
-      
-      phrases.to.read <- strsplit(text.en, "[\r\n]")[[1]]
-      for (i in 1:length(phrases.to.read)){
-        
-        system("cmd.exe", input = paste('espeak -s150 -ven "',phrases.to.read[i],'"', sep=""))
-        
-      } 
-      
-      
+      my.new.text <- gettxt(urlNew.en)
     }
     
-    if(input$lang=="PT"){
+    if(input$lang=="pt-pt"){
       url1.pt <- 'https://pt.wikipedia.org/wiki'
       urlNew.pt = paste(url1.pt, inp,sep = '/')
-      text.pt <- gettxt(urlNew.pt)
-      text.pt
-      
-      phrases.to.read <- strsplit(text.pt, "[\r\n]")[[1]]
-      
-      for (i in 1:length(phrases.to.read)){
-        
-        system("cmd.exe", input = paste('espeak -s140 -vpt-pt -k -20 "',phrases.to.read[i],'"', sep=""))
-        
-      } 
-      
+      my.new.text <- gettxt(urlNew.pt)
     }
     
-        #com tts_ITRI
-    #text.new <- gsub("[\r\n]", ". ", text)
-    #browser()
-    #text.new = substr(text.new, start = 1, stop = 1000)
     
-    #tts_ITRI(new_text, speaker = "ENG_Bob",destfile="temp.mp3")
-    #tts_ITRI(text, speaker = "ENG_Bob",destfile="temp.mp3")
+    my.new.text <<- my.new.text
     
+    output$nText <- renderText({
+      my.new.text
+    })
+    tts.espeak(lang,speed)
   })
   
-  #observeEvent(input$Run, {
-  #  insertUI(selector = "#Run",
-  #           where = "afterEnd",
-  #           ui = tags$audio(src = "temp.mp3", type = "audio/mp3", autoplay = NA, controls = NA, style="display:none;"),
-  #           immediate = FALSE
-  #  )
-  #})
   
-  
-  output$nText <- renderText({
-    ntext()
+    
+  observeEvent(input$Run,{
+      ntext()
   })
   
 }
