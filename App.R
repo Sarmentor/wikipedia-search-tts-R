@@ -7,6 +7,8 @@ library(htm2txt)
 my.dir <- getwd()
 setwd(dir=my.dir)
 
+my.OS <- Sys.info()['sysname']
+
 ui <- fluidPage( shinythemes::themeSelector(), sidebarPanel(
                 selectInput(inputId="lang", label="Select Language:",choices= c("en","pt-pt"), selected="en"),
                 textInput("n", "Input Search:"),
@@ -38,8 +40,15 @@ server <- function(input, output, session){
     for (i in 1:length(phrases.to.read)){
       showModal(modalDialog(phrases.to.read[i], title ="Reading Text/Lendo o Texto...", footer = modalButton("Close/Sair"),
                   size = "l", easyClose = TRUE, fade = TRUE))
-      
-      system("cmd.exe", input = paste('espeak -s ',paste(speed),' -v ',lang,' -k -20 "',phrases.to.read[i],'"', sep=""))
+      if(grepl("win",tolower(my.OS))){
+        system("cmd.exe", input = paste('espeak -s ',paste(speed),' -v ',lang,' -k -20 "',phrases.to.read[i],'"', sep=""))
+      }
+      if(grepl("lin",tolower(my.OS))){
+        system(command= paste('espeak -s ',paste(speed),' -v ',lang,' -k -20 "',phrases.to.read[i],'"', sep=""))
+      }
+      if(grepl("mac",tolower(my.OS))){
+        system(command=paste('espeak -s ',paste(speed),' -v ',lang,' -k -20 "',phrases.to.read[i],'"', sep=""))
+      }
     }
   }
   
